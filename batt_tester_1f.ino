@@ -69,32 +69,36 @@ String csv = "";
 void setup() {
   Serial.begin(9600);
   pinMode(on_off, OUTPUT);
-  SD.begin(chipSelect);
+
+  //SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
+  if(!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDRESS)) { 
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;); //Don't proceed, loop forever
+  }
+  display.clearDisplay();
+  display.setTextSize(1);      //Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE); //Draw white text
+  display.setCursor(0,0);
+  display.print("Starting...");
+  display.display();
+  delay(1000); 
 
   if (!SD.begin(chipSelect)) {
     Serial.println("Card not present");
-  }
-    //Initialize SoftSPI and RF24
-    mySPI.begin();
-    radio.begin(&mySPI);  //Use the software SPI
-    radio.setAutoAck(false);
-    radio.setDataRate(RF24_1MBPS);
-    radio.setPALevel(RF24_PA_MAX);
-    radio.openReadingPipe(1, address); //Open pipe 1 with the address
-    radio.startListening();
-        //Initialize OLED
-  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDRESS)) {
-    Serial.println(F("SSD1306 allocation failed"));
-      for(;;);  //loop forever
-  }
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0,0);
-    display.print("Starting...");
+    display.println("Card not present");
     display.display();
-    delay(1000); 
+    delay(2000);
+  }
+
+  mySPI.begin();
+  radio.begin(&mySPI);
+  radio.setAutoAck(false);
+  radio.setDataRate(RF24_1MBPS);
+  radio.setPALevel(RF24_PA_MAX);
+  radio.openReadingPipe(1, address);
+  radio.startListening();
 }
+
 
 void loop() {
     if (!isDutyCycleReceived) {
@@ -104,17 +108,18 @@ void loop() {
             if (receivedDutyCycle >= 0.1 && receivedDutyCycle <= 1.0) {
                 duty_cycle = receivedDutyCycle;
                 isDutyCycleReceived = true;
+                
                 display.clearDisplay();
                 display.setCursor(0,0);
-                display.print("Duty cycle received from RF remote.");
-                display.setCursor(0,10);
+                display.print("Duty cycle received: ");
+                display.println(duty_cycle);
+                display.setCursor(0,20);
                 display.print("Starting data logging...");
                 display.display();
                 delay(2000);  //Display the message for 2 seconds
-
             }
         }
-    } else {
+    }  else {
         if (Serial.available()) {
             char incoming_char = Serial.peek(); 
             if (incoming_char >= '0' && incoming_char <= '9' || incoming_char == '.' || incoming_char == '-') {

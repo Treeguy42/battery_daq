@@ -1,7 +1,7 @@
 #include <RF24.h>
 
 RF24 radio(9, 10);  //CE, CSN
-const byte pins[] = {2, 3, 4, 5, 6, 7, 8};  //Pin assignments for the buttons
+const byte pins[] = {2, 3, 4, 5, 6, 7, 8};  //(Digital)D-Pin assignments for the buttons
 float duty_cycle = 0.5;
 
 void setup() {
@@ -19,14 +19,14 @@ void setup() {
 
 void loop() {
   //Check each button for changes in duty cycle
-  if (digitalRead(pins[0]) == LOW) { duty_cycle -= 0.25; delay(200); }
-  if (digitalRead(pins[1]) == LOW) { duty_cycle += 0.25; delay(200); }
-  if (digitalRead(pins[2]) == LOW) { duty_cycle -= 0.2; delay(200); }
-  if (digitalRead(pins[3]) == LOW) { duty_cycle += 0.2; delay(200); }
-  if (digitalRead(pins[4]) == LOW) { duty_cycle -= 0.1; delay(200); }
-  if (digitalRead(pins[5]) == LOW) { duty_cycle += 0.1; delay(200); }
+  if (digitalRead(pins[0]) == LOW) { duty_cycle -= 0.25; delay(200); } //D2
+  if (digitalRead(pins[1]) == LOW) { duty_cycle += 0.25; delay(200); } //D3
+  if (digitalRead(pins[2]) == LOW) { duty_cycle -= 0.2; delay(200); } //D4
+  if (digitalRead(pins[3]) == LOW) { duty_cycle += 0.2; delay(200); } //D5
+  if (digitalRead(pins[4]) == LOW) { duty_cycle -= 0.1; delay(200); } //D6
+  if (digitalRead(pins[5]) == LOW) { duty_cycle += 0.1; delay(200); } //D7
 
-  //Check the "send" button
+  //Check the "send" button D8
   if (digitalRead(pins[6]) == LOW) {
     Serial.println("Sending updated duty cycle: " + String(duty_cycle));
     radio.stopListening();

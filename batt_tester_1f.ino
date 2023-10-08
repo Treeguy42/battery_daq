@@ -51,10 +51,10 @@ const int chipSelect = 53;
 #define OLED_I2C_ADDRESS 0x3C  //Typically 0x3C or 0x3D
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-//rf24 module library & softSPI
+//rf24 module library
 #include <RF24.h>
-#include <SoftSPI.h>
-SoftSPI mySPI(45, 46, 44);  //MOSI, MISO, SCK
+#include <SPI_UART.h>
+//SoftSPI <46, 45, 44> mySPI;  //MISO, MOSI, SCK
 RF24 radio(9, 10);  //CE, CSN
 const byte address[6] = "00001";
 bool isDutyCycleReceived = false;
@@ -90,15 +90,13 @@ void setup() {
     delay(2000);
   }
 
-  mySPI.begin();
-  radio.begin(&mySPI);
+  radio.begin();
   radio.setAutoAck(false);
   radio.setDataRate(RF24_1MBPS);
   radio.setPALevel(RF24_PA_MAX);
   radio.openReadingPipe(1, address);
   radio.startListening();
 }
-
 
 void loop() {
     if (!isDutyCycleReceived) {

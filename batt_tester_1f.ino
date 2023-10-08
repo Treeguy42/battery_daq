@@ -1,4 +1,4 @@
-//analog inouts
+//analog pinouts
 #define batt_in A0
 #define hc_in A1
 #define on_off 8 //pin that turns cycles the ss_relay acording to duty cycle
@@ -39,8 +39,17 @@ float r_inf = Ro*exp(-B/To);
 
 //data file, SD card
 #include <SPI.h>
-#include<SD.h>
+#include <SD.h>
 const int chipSelect = 53;
+
+//OLED items
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET    -1
+#define OLED_I2C_ADDRESS 0x3C  //Typically 0x3C or 0x3D
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 //rf24 module library & softSPI
 #include <RF24.h>
@@ -73,6 +82,18 @@ void setup() {
     radio.setPALevel(RF24_PA_MAX);
     radio.openReadingPipe(1, address); //Open pipe 1 with the address
     radio.startListening();
+        //Initialize OLED
+  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+      for(;;);  //loop forever
+  }
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0,0);
+    display.print("Starting...");
+    display.display();
+    delay(1000); 
 }
 
 void loop() {
@@ -83,7 +104,14 @@ void loop() {
             if (receivedDutyCycle >= 0.1 && receivedDutyCycle <= 1.0) {
                 duty_cycle = receivedDutyCycle;
                 isDutyCycleReceived = true;
-                Serial.println("Duty cycle received from RF remote. Starting data logging...");
+                display.clearDisplay();
+                display.setCursor(0,0);
+                display.print("Duty cycle received from RF remote.");
+                display.setCursor(0,10);
+                display.print("Starting data logging...");
+                display.display();
+                delay(2000);  //Display the message for 2 seconds
+
             }
         }
     } else {

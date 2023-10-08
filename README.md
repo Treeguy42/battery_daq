@@ -5,3 +5,5 @@ Capable of sending battery power to apply load at arbitrary duty cycle.
 See Arduino Thermistor based DAQ pdf for information on how this works and how to use it.
 
 There are lazy fixes in the code. Do not use this for any reason other than learning!!
+
+Code is under rework to operate off of RF remote.

@@ -1,3 +1,4 @@
+@@ -0,0 +1,173 @@
 //analog inouts
 #define batt_in A0
 #define hc_in A1
@@ -41,6 +42,11 @@ float r_inf = Ro*exp(-B/To);
 #include <SPI.h>
 #include<SD.h>
 const int chipSelect = 53;
+
+//rf24 module library
+#include <RF24.h>
+RF24 radio(9,10); //CE, CSN
+
 
 //time
 unsigned long runningTime = 0;

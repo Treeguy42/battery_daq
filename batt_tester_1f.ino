@@ -78,17 +78,19 @@ void setup() {
   display.clearDisplay();
   display.setTextSize(1);      //Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE); //Draw white text
-  display.setCursor(0,0);
+  display.setCursor(0,0);      //Start at top-left corner
   display.print("Starting...");
   display.display();
   delay(1000); 
 
   if (!SD.begin(chipSelect)) {
     Serial.println("Card not present");
+    display.setCursor(0,8);   //Move to the next line
     display.println("Card not present");
     display.display();
     delay(2000);
   }
+
 
   radio.begin();
   radio.setAutoAck(false);
@@ -107,12 +109,15 @@ void loop() {
                 duty_cycle = receivedDutyCycle;
                 isDutyCycleReceived = true;
                 
+                // Clear the previous message from the OLED
                 display.clearDisplay();
                 display.setCursor(0,0);
                 display.print("Duty cycle received: ");
                 display.println(duty_cycle);
                 display.setCursor(0,20);
-                display.print("Starting data logging...");
+
+                // Update the message on the OLED
+                display.print("Logging...");
                 display.display();
                 delay(2000);  //Display the message for 2 seconds
             }

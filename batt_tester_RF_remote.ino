@@ -39,6 +39,8 @@ void setup() {
 }
 
 void loop() {
+    bool receivedConfirmation = false;  //Declare here for wider scope
+
     //Check each button for changes in duty cycle
     if (digitalRead(pins[0]) == LOW) { duty_cycle -= 0.25; delay(200); }
     if (digitalRead(pins[1]) == LOW) { duty_cycle += 0.25; delay(200); }
@@ -49,56 +51,16 @@ void loop() {
 
     //Check the "send" button D8
     if (digitalRead(pins[6]) == LOW) {
-        display.clearDisplay();
-        display.setCursor(0, 0);
-        display.print("Sending updated duty cycle:");
-        display.setCursor(0, 20);
-        display.print(String(duty_cycle));
+        display.setCursor(0,10);  //Second line
+        display.fillRect(0, 10, SCREEN_WIDTH, 10, WHITE); //Clearing the second line
+        display.print("Sending updated duty cycle: ");
         display.display();
 
-        radio.write(&duty_cycle, sizeof(duty_cycle));
-        delay(200);  //Simple debounce
-    }
-
-    //Continuously show current duty cycle
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    display.print("Duty Cycle: ");
-    display.print(String(duty_cycle));
-    display.display();
-
-    //Limit duty_cycle within [0.1, 1.0]
-    duty_cycle = constrain(duty_cycle, 0.1, 1.0);
-    delay(10);
-}
-
-
-/*
-void loop() {
-    // Check each button for changes in duty cycle
-    if (digitalRead(pins[0]) == LOW) { duty_cycle -= 0.25; delay(200); }
-    if (digitalRead(pins[1]) == LOW) { duty_cycle += 0.25; delay(200); }
-    if (digitalRead(pins[2]) == LOW) { duty_cycle -= 0.2; delay(200); }
-    if (digitalRead(pins[3]) == LOW) { duty_cycle += 0.2; delay(200); }
-    if (digitalRead(pins[4]) == LOW) { duty_cycle -= 0.1; delay(200); }
-    if (digitalRead(pins[5]) == LOW) { duty_cycle += 0.1; delay(200); }
-
-    // Check the "send" button D8
-    if (digitalRead(pins[6]) == LOW) {
-        display.clearDisplay();
-        display.setCursor(0, 0);
-        display.print("Sending updated duty cycle:");
-        display.setCursor(0, 20);
-        display.print(String(duty_cycle));
-        display.display();
-
-        radio.stopListening();
         radio.write(&duty_cycle, sizeof(duty_cycle));
 
         char incoming_msg[15] = "";
         radio.startListening();
         unsigned long start_time = millis();
-        bool receivedConfirmation = false;
         while (millis() - start_time < 2000) {
             if (radio.available()) {
                 radio.read(&incoming_msg, sizeof(incoming_msg));
@@ -109,29 +71,30 @@ void loop() {
             }
         }
 
-        display.clearDisplay();
-        display.setCursor(0, 0);
-        display.print("Duty Cycle: ");
-        display.print(String(duty_cycle));
-        display.setCursor(0, 20);
         if (receivedConfirmation) {
-            display.print("Confirmation: Go!");
-        } else {
-            display.print("Confirmation: No-Go");
+            display.setCursor(0,10);  //Second line
+            display.fillRect(0, 10, SCREEN_WIDTH, 10, WHITE); //Clearing the second line
+            display.display();
         }
-        display.display();
     }
 
-    // Continuously show current duty cycle without sending
-    else {
-        display.clearDisplay();
-        display.setCursor(0, 0);
-        display.print("Duty Cycle: ");
-        display.print(String(duty_cycle));
-        display.display();
-    }
+    //Display duty cycle on top line
+    display.setCursor(0, 0);  // Top line
+    display.fillRect(0, 0, SCREEN_WIDTH, 10, WHITE); //Clearing the top line
+    display.print("Duty Cycle: ");
+    display.print(String(duty_cycle, 1));
+    display.display();
 
-    // Limit duty_cycle within [0.1, 1.0]
+    //Display status on bottom line
+    display.setCursor(0, 56);  // Bottom line
+    if (receivedConfirmation) {
+        display.print("GO");
+    } else {
+        display.print("NO-GO");
+    }
+    display.display();
+
+    //Limit duty_cycle within [0.1, 1.0]
     duty_cycle = constrain(duty_cycle, 0.1, 1.0);
     delay(10);
-*/
+}

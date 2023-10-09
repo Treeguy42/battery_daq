@@ -108,115 +108,115 @@ void loop() {
             if (receivedDutyCycle >= 0.1 && receivedDutyCycle <= 1.0) {
                 duty_cycle = receivedDutyCycle;
                 isDutyCycleReceived = true;
-                
-                // Clear the previous message from the OLED
+
                 display.clearDisplay();
-                display.setCursor(0,0);
+                display.setCursor(0, 0);
                 display.print("Duty cycle received: ");
                 display.println(duty_cycle);
-                display.setCursor(0,20);
-
-                // Update the message on the OLED
+                display.setCursor(0, 20);
                 display.print("Logging...");
                 display.display();
-                delay(2000);  //Display the message for 2 seconds
+                delay(2000);
+
+                const char* confirmation = "Received";
+                radio.stopListening();
+                radio.write(confirmation, strlen(confirmation) + 1);
+                radio.startListening();
             }
         }
-    }  else {
+    } else {
         if (Serial.available()) {
-            char incoming_char = Serial.peek(); 
+            char incoming_char = Serial.peek();
             if (incoming_char >= '0' && incoming_char <= '9' || incoming_char == '.' || incoming_char == '-') {
-                duty_cycle = float(Serial.parseFloat());
+                duty_cycle = Serial.parseFloat();
                 Serial.println(duty_cycle);
             } else {
-                Serial.read(); 
+                Serial.read();
             }
         }
-        else {
 
-            //Read analog inputs
-            digitalWrite(on_off, HIGH);
-            delay(10);
-            adci0 = analogRead(batt_in);
-            adci1 = analogRead(hc_in);
+        //Read analog inputs
+        digitalWrite(on_off, HIGH);
+        delay(10);
+        adci0 = analogRead(batt_in);
+        adci1 = analogRead(hc_in);
 
-            //bit to volt at reference
-            adcv0 = (adci0 * ref_volts) / 1024.0;
-            adcv1 = (adci1 * ref_volts) / 1024.0;
+        //bit to volt at reference
+        adcv0 = (adci0 * ref_volts) / 1024.0;
+        adcv1 = (adci1 * ref_volts) / 1024.0;
 
-            //calc voltage divider input
-            batt_volts = adcv0 / (R2/(R1+R2));
-            hc_volts = adcv1 / (R2/(R1+R2));
+        //calc voltage divider input
+        batt_volts = adcv0 / (R2/(R1+R2));
+        hc_volts = adcv1 / (R2/(R1+R2));
 
-            for(int i = 0; i < 1000; i++){
-                Vout = (Vout + (resADC * analogRead(A2)));
-                delay(1);
-            }
-            Vout = Vout/1000;
-            Current = (Vout - 2.49)/(.066*2); 
+        for(int i = 0; i < 1000; i++){
+            Vout = (Vout + (resADC * analogRead(A2)));
+            delay(1);
+        }
+        Vout = Vout/1000;
+        Current = (Vout - 2.49)/(.066*2); 
 
-            //read and calc thermistor temps
-            V0 = analogRead(A3);
-            V0 = analogRead(A3); 
-            V1 = analogRead(A4);
-            V2 = analogRead(A5);
-            V3 = analogRead(A6);
-            V4 = analogRead(A7);
-            V5 = analogRead(A8);
-            V6 = analogRead(A9);
-            V7 = analogRead(A10);
-            V8 = analogRead(A11);
-            V9 = analogRead(A12);
-            V10 = analogRead(A13);
-            V11 = analogRead(A14);
-            V12 = analogRead(A15);
+        //read and calc thermistor temps
+        V0 = analogRead(A3);
+        V0 = analogRead(A3); 
+        V1 = analogRead(A4);
+        V2 = analogRead(A5);
+        V3 = analogRead(A6);
+        V4 = analogRead(A7);
+        V5 = analogRead(A8);
+        V6 = analogRead(A9);
+        V7 = analogRead(A10);
+        V8 = analogRead(A11);
+        V9 = analogRead(A12);
+        V10 = analogRead(A13);
+        V11 = analogRead(A14);
+        V12 = analogRead(A15);
 
-            //Thermistor circuit//Voltage divider network//Series Circuit
-            R20 = Ro*1023.0/V0-Ro;
-            R21 = Ro*1023.0/V1-Ro;
-            R22 = Ro*1023.0/V2-Ro;
-            R23 = Ro*1023.0/V3-Ro;
-            R24 = Ro*1023.0/V4-Ro;
-            R25 = Ro*1023.0/V5-Ro;
-            R26 = Ro*1023.0/V6-Ro;
-            R27 = Ro*1023.0/V7-Ro;
-            R28 = Ro*1023.0/V8-Ro;
-            R29 = Ro*1023.0/V9-Ro;
-            R210 = Ro*1023.0/V10-Ro;
-            R211 = Ro*1023.0/V11-Ro;
-            R212 = Ro*1023.0/V12-Ro;
+        //Thermistor circuit//Voltage divider network//Series Circuit
+        R20 = Ro*1023.0/V0-Ro;
+        R21 = Ro*1023.0/V1-Ro;
+        R22 = Ro*1023.0/V2-Ro;
+        R23 = Ro*1023.0/V3-Ro;
+        R24 = Ro*1023.0/V4-Ro;
+        R25 = Ro*1023.0/V5-Ro;
+        R26 = Ro*1023.0/V6-Ro;
+        R27 = Ro*1023.0/V7-Ro;
+        R28 = Ro*1023.0/V8-Ro;
+        R29 = Ro*1023.0/V9-Ro;
+        R210 = Ro*1023.0/V10-Ro;
+        R211 = Ro*1023.0/V11-Ro;
+        R212 = Ro*1023.0/V12-Ro;
 
-            //Beta Parameter Equation
-            T0 = B/log(R20/r_inf)-K; 
-            T1 = B/log(R21/r_inf)-K;
-            T2 = B/log(R22/r_inf)-K;
-            T3 = B/log(R23/r_inf)-K;
-            T4 = B/log(R24/r_inf)-K;
-            T5 = B/log(R25/r_inf)-K;
-            T6 = B/log(R26/r_inf)-K;
-            T7 = B/log(R27/r_inf)-K;
-            T8 = B/log(R28/r_inf)-K;
-            T9 = B/log(R29/r_inf)-K;
-            T10 = B/log(R210/r_inf)-K;
-            T11 = B/log(R211/r_inf)-K;
-            T12 = B/log(R212/r_inf)-K;
+        //Beta Parameter Equation
+        T0 = B/log(R20/r_inf)-K; 
+        T1 = B/log(R21/r_inf)-K;
+        T2 = B/log(R22/r_inf)-K;
+        T3 = B/log(R23/r_inf)-K;
+        T4 = B/log(R24/r_inf)-K;
+        T5 = B/log(R25/r_inf)-K;
+        T6 = B/log(R26/r_inf)-K;
+        T7 = B/log(R27/r_inf)-K;
+        T8 = B/log(R28/r_inf)-K;
+        T9 = B/log(R29/r_inf)-K;
+        T10 = B/log(R210/r_inf)-K;
+        T11 = B/log(R211/r_inf)-K;
+        T12 = B/log(R212/r_inf)-K;
 
-            dT = millis() - runningTime;
-            runningTime = millis();
+        dT = millis() - runningTime;
+        runningTime = millis();
 
-            csv = String(runningTime)+","+String(dT)+","+String(batt_volts, 2)+","+String(hc_volts, 2)+","+String(Current, 2)+","+String(duty_cycle)+","+String(T0)+","+String(T1)+","+String(T2)+","+String(T3)+","+String(T4)+","+String(T5)+","+String(T6)+","+String(T7)+","+String(T8)+","+String(T9)+","+String(T10)+","+String(T11)+","+String(T12);
+        csv = String(runningTime)+","+String(dT)+","+String(batt_volts, 2)+","+String(hc_volts, 2)+","+String(Current, 2)+","+String(duty_cycle)+","+String(T0)+","+String(T1)+","+String(T2)+","+String(T3)+","+String(T4)+","+String(T5)+","+String(T6)+","+String(T7)+","+String(T8)+","+String(T9)+","+String(T10)+","+String(T11)+","+String(T12);
 
-            Serial.println(csv);
+        Serial.println(csv);
             
-            digitalWrite(on_off, LOW);
-            //script takes 1200ms to run plus added delays
-            delay(1200/duty_cycle - 1200);
+        digitalWrite(on_off, LOW);
+        //script takes 1200ms to run plus added delays
+        delay(1200/duty_cycle - 1200);
 
-            File dataFile = SD.open("csvData.txt", FILE_WRITE);
-            if (dataFile) {
-                dataFile.println(csv);
-                dataFile.close();
-            }  
+        File dataFile = SD.open("csvData.txt", FILE_WRITE);
+        if (dataFile) {
+            dataFile.println(csv);
+            dataFile.close();
         }
     }
 }

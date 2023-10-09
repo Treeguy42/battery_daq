@@ -56,6 +56,42 @@ void loop() {
         display.print(String(duty_cycle));
         display.display();
 
+        radio.write(&duty_cycle, sizeof(duty_cycle));
+        delay(200);  //Simple debounce
+    }
+
+    //Continuously show current duty cycle
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.print("Duty Cycle: ");
+    display.print(String(duty_cycle));
+    display.display();
+
+    //Limit duty_cycle within [0.1, 1.0]
+    duty_cycle = constrain(duty_cycle, 0.1, 1.0);
+    delay(10);
+}
+
+
+/*
+void loop() {
+    // Check each button for changes in duty cycle
+    if (digitalRead(pins[0]) == LOW) { duty_cycle -= 0.25; delay(200); }
+    if (digitalRead(pins[1]) == LOW) { duty_cycle += 0.25; delay(200); }
+    if (digitalRead(pins[2]) == LOW) { duty_cycle -= 0.2; delay(200); }
+    if (digitalRead(pins[3]) == LOW) { duty_cycle += 0.2; delay(200); }
+    if (digitalRead(pins[4]) == LOW) { duty_cycle -= 0.1; delay(200); }
+    if (digitalRead(pins[5]) == LOW) { duty_cycle += 0.1; delay(200); }
+
+    // Check the "send" button D8
+    if (digitalRead(pins[6]) == LOW) {
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        display.print("Sending updated duty cycle:");
+        display.setCursor(0, 20);
+        display.print(String(duty_cycle));
+        display.display();
+
         radio.stopListening();
         radio.write(&duty_cycle, sizeof(duty_cycle));
 
@@ -86,7 +122,7 @@ void loop() {
         display.display();
     }
 
-    //Continuously show current duty cycle without sending
+    // Continuously show current duty cycle without sending
     else {
         display.clearDisplay();
         display.setCursor(0, 0);
@@ -95,7 +131,7 @@ void loop() {
         display.display();
     }
 
-    //Limit duty_cycle within [0.1, 1.0]
+    // Limit duty_cycle within [0.1, 1.0]
     duty_cycle = constrain(duty_cycle, 0.1, 1.0);
     delay(10);
-}
+*/

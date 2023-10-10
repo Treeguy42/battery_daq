@@ -1,4 +1,4 @@
-/analog pinouts
+//analog pinouts
 #define batt_in A0
 #define hc_in A1
 #define on_off 8 //pin that turns cycles the ss_relay acording to duty cycle
@@ -54,7 +54,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //rf24 module library
 #include <RF24.h>
 #include <SPI_UART.h>
-//SoftSPI <46, 45, 44> mySPI;  //MISO, MOSI, SCK
 RF24 radio(9, 10);  //CE, CSN
 const byte address[6] = "00001";
 bool isDutyCycleReceived = false;
@@ -83,43 +82,47 @@ void setup() {
   display.display();
   delay(1000); 
 
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card not present");
-    display.setCursor(0,8);   //Move to the next line
-    display.println("Card not present");
-    display.display();
-    delay(2000);
-  }
+    if (!SD.begin(chipSelect)) {
+        Serial.println("Card not present");
+        //OLED message
+        display.setCursor(0,8);  
+        display.println("Card not present");
+        display.display();
+        delay(2000);
+    }
 
-
-  radio.begin();
-  radio.setAutoAck(false);
-  radio.setDataRate(RF24_1MBPS);
-  radio.setPALevel(RF24_PA_MAX);
-  radio.openReadingPipe(1, address);
-  radio.startListening();
+    //RF24 initialization
+    radio.begin();
+    radio.setAutoAck(true); 
+    radio.setDataRate(RF24_1MBPS);
+    radio.setPALevel(RF24_PA_MAX);
+    radio.openReadingPipe(1, address);
+    radio.startListening();
 }
 
 void loop() {
     if (!isDutyCycleReceived) {
+       //Check for duty_cycle update from RF remote
         if (radio.available()) {
             float receivedDutyCycle;
             radio.read(&receivedDutyCycle, sizeof(receivedDutyCycle));
             if (receivedDutyCycle >= 0.1 && receivedDutyCycle <= 1.0) {
                 duty_cycle = receivedDutyCycle;
-                isDutyCycleReceived = true;
-                
-                // Clear the previous message from the OLED
+
+                //Send acknowledgment to RF remote
+                char ackMsg[15] = "Received";
+                radio.stopListening();
+                radio.write(&ackMsg, sizeof(ackMsg));
+                radio.startListening();
+
+                //OLED display for received value
                 display.clearDisplay();
                 display.setCursor(0,0);
-                display.print("Duty cycle received: ");
+                display.print("Duty cycle: ");
                 display.println(duty_cycle);
-                display.setCursor(0,20);
-
-                // Update the message on the OLED
-                display.print("Logging...");
                 display.display();
-                delay(2000);  //Display the message for 2 seconds
+
+                isDutyCycleReceived = true; //Update the flag
             }
         }
     }  else {
@@ -152,6 +155,7 @@ void loop() {
                 Vout = (Vout + (resADC * analogRead(A2)));
                 delay(1);
             }
+			
             Vout = Vout/1000;
             Current = (Vout - 2.49)/(.066*2); 
 

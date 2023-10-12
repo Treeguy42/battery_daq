@@ -30,11 +30,12 @@ float T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12;
 float R20, R21, R22, R23, R24, R25, R26, R27, R28, R29, R210, R211, R212;
 float K = 273.15;
 
+#include <math.h>
 //Given thermistor values from manufacturer     
 float B = 3950;
 float To = 25+K;
 float Ro = 100000;
-float r_inf = Ro*exp(-B/To);
+float r_inf = Ro * expf(-B/To);
 
 //data file, SD card
 #include <SPI.h>
@@ -49,8 +50,8 @@ unsigned long dT = 0;
 #include <IRremote.h>
 #include <Arduino.h>
 #include <IRremote.hpp>  //include the library for IR
-#define RECV_PIN  11   //Change this to whatever pin you're using for the IR receiver
-IRrecv irrecv(RECV_PIN);
+#define IR_RECEIVE_PIN 11   //Change this to whatever pin you're using for the IR receiver
+//IRrecv irrecv(IR_RECEIVE_PIN);
 //decode_results results;
 
 #include <Adafruit_SSD1306.h>
@@ -61,6 +62,78 @@ Adafruit_SSD1306 display(128, 64, &Wire, -1);
 bool isCollectingData = false;
 
 String csv = "";
+
+void handleIRCommand(decode_type_t command) {
+    switch (command) {
+        case 0xBC43FF00:  //Button '1'
+            duty_cycle = 0.1;
+            break;
+        case 0xF807FF00:  //Button '2'
+            duty_cycle = 0.2;
+            break;
+        case 0xEA15FF00:  //Button '3'
+            duty_cycle = 0.3;
+            break;
+        case 0xF609FF00:  //Button '4'
+            duty_cycle = 0.4;
+            break;
+        case 0xE916FF00:  //Button '5'
+            duty_cycle = 0.5;
+            break;
+        case 0xE619FF00:  //Button '6'
+            duty_cycle = 0.6;
+            break;
+        case 0xF20DFF00:  //Button '7'
+            duty_cycle = 0.7;
+            break;
+        case 0xF30CFF00:  //Button '8'
+            duty_cycle = 0.8;
+            break;
+        case 0xE718FF00:  //Button '9'
+            duty_cycle = 0.9;
+            break;
+        case 0xB847FF00:  //Button '0'
+            duty_cycle = 1.0;
+            break;
+        case 0xA15EFF00:  //PWR button
+            runDAQ();
+            break;
+        case 0xBD42FF00:  //Play/pause button
+            isCollectingData = false; //Stops data collection
+            digitalWrite(on_off, LOW); //Assuming you want to turn off the relay as well
+            break;
+        default:
+            //Unknown command received, you can handle it or ignore.
+            break;
+    }
+    updateOled(); //Refresh the OLED display with updated values
+}
+
+
+void updateOled() {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+
+    display.print("Duty Cycle: "); 
+    display.println(duty_cycle, 1);  //Display one decimal place for the duty cycle
+
+    display.print("Status: ");
+    if (isCollectingData) {
+        display.println("RUNNING");
+    } else {
+        display.println("IDLE");
+    }
+
+    if (!SD.begin(chipSelect)) {
+        display.println("SD Card: Not present");
+    } else {
+        display.println("SD Card: Present");
+    }
+
+    display.display();
+}
 
 void setup() {
     Serial.begin(9600);
@@ -76,30 +149,25 @@ void setup() {
     display.clearDisplay();
     
     //IR setup
-    irrecv.enableIRIn();
-    
+    IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+
     SD.begin(chipSelect);
     updateOled();
 }
 
 void loop() {
     //Check for IR signals
-    if (irrecv.decode(&results)) {
-        //Replace with actual IR codes you want to use
-        switch (results.value) {
-            case 0xFF6897:  //<pending>
-                //TODO: What you want to do when the button associated with 0xFF6897 is pressed
-                break;
-            //... (Other cases)
-            default:
-                break;
-        }
-        irrecv.resume(); 
-    }
+if (IrReceiver.decode()) {
+        handleIRCommand(IrReceiver.decodedIRData.decodedRawData);
+        IrReceiver.resume();
+}
+
+    updateOled();
+    IrReceiver.resume();
 
     //If there's serial input to adjust the duty cycle
     if (Serial.available()) {
-        char incoming_char = Serial.peek(); 
+        char incoming_char = Serial.peek();
         if (incoming_char >= '0' && incoming_char <= '9' || incoming_char == '.' || incoming_char == '-') {
             duty_cycle = float(Serial.parseFloat());
             updateOled();
@@ -159,6 +227,7 @@ void calculateThermistorValues() {
     dT = millis() - runningTime;
     runningTime = millis();
 }
+
 String generateCSV() {
     return String(runningTime) + "," + String(dT) + "," + 
              String(batt_volts, 2) + "," + String(hc_volts, 2) + 
@@ -221,29 +290,4 @@ void runDAQ() {
 
     digitalWrite(on_off, LOW);
     nonBlockingDelay();
-}
-
-void updateOled() {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 0);
-
-    display.print("Duty Cycle: "); 
-    display.println(duty_cycle);
-
-    display.print("Status: ");
-    if (isCollectingData) {
-        display.println("Collecting data");
-    } else {
-        display.println("Idle");
-    }
-
-    if (!SD.begin(chipSelect)) {
-        display.println("SD Card: Not present");
-    } else {
-        display.println("SD Card: Present");
-    }
-
-    display.display();
 }

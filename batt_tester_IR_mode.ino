@@ -47,7 +47,7 @@ unsigned long runningTime = 0;
 unsigned long dT = 0;
 
 #include <Wire.h>
-#include <IRremote.h>
+//#include <IRremote.h>
 #include <Arduino.h>
 #include <IRremote.hpp>  //include the library for IR
 #define IR_RECEIVE_PIN 11   //Change this to whatever pin you're using for the IR receiver
@@ -65,52 +65,65 @@ String csv = "";
 
 void handleIRCommand(decode_type_t command) {
     switch (command) {
-        case 0xBC43FF00:  //Button '1'
+        case 0xFD08F7:
             duty_cycle = 0.1;
+            Serial.println("Button Detected: 1");
             break;
-        case 0xF807FF00:  //Button '2'
+        case 0xFD8877:
             duty_cycle = 0.2;
+            Serial.println("Button Detected: 2");
             break;
-        case 0xEA15FF00:  //Button '3'
+        case 0xFD48B7:
             duty_cycle = 0.3;
+            Serial.println("Button Detected: 3");
             break;
-        case 0xF609FF00:  //Button '4'
+        case 0xFD28D7:
             duty_cycle = 0.4;
+            Serial.println("Button Detected: 4");
             break;
-        case 0xE916FF00:  //Button '5'
+        case 0xFDA857:
             duty_cycle = 0.5;
+            Serial.println("Button Detected: 5");
             break;
-        case 0xE619FF00:  //Button '6'
+        case 0xFD6897:
             duty_cycle = 0.6;
+            Serial.println("Button Detected: 6");
             break;
-        case 0xF20DFF00:  //Button '7'
+        case 0xFD18E7:
             duty_cycle = 0.7;
+            Serial.println("Button Detected: 7");
             break;
-        case 0xF30CFF00:  //Button '8'
+        case 0xFD9867:
             duty_cycle = 0.8;
+            Serial.println("Button Detected: 8");
             break;
-        case 0xE718FF00:  //Button '9'
+        case 0xFD58A7:
             duty_cycle = 0.9;
+            Serial.println("Button Detected: 9");
             break;
-        case 0xB847FF00:  //Button '0'
+        case 0xFD30CF:
             duty_cycle = 1.0;
+            Serial.println("Button Detected: 0");
             break;
-        case 0xA15EFF00:  //PWR button
+        case 0xFD00FF:
             runDAQ();
+            Serial.println("Button Detected: PWR");
             break;
-        case 0xBD42FF00:  //Play/pause button
+        case 0xFD40BF:
             isCollectingData = false; //Stops data collection
-            digitalWrite(on_off, LOW); //Assuming you want to turn off the relay as well
+            digitalWrite(on_off, LOW); //Turns off the relay
+            Serial.println("Button Detected: FUNC/STOP");
             break;
         default:
-            //Unknown command received, you can handle it or ignore.
+            // If you want to print unknown commands for debugging
+            // Serial.println("Unknown Button Detected");
             break;
     }
     updateOled(); //Refresh the OLED display with updated values
 }
 
-
 void updateOled() {
+  Serial.println("Looping...");
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
@@ -127,9 +140,11 @@ void updateOled() {
     }
 
     if (!SD.begin(chipSelect)) {
-        display.println("SD Card: Not present");
+        display.print("SD Card: ");
+        display.println("Not present");
     } else {
-        display.println("SD Card: Present");
+        display.print("SD Card: ");
+        display.println("Present");
     }
 
     display.display();
@@ -153,11 +168,22 @@ void setup() {
 
     SD.begin(chipSelect);
     updateOled();
+
+    display.clearDisplay();
+display.setCursor(0, 0);
+display.print("Setup Complete");
+display.display();
+
+static int counter = 0;
+counter++;
+display.print("Loop Count: ");
+display.println(counter);
 }
 
 void loop() {
     //Check for IR signals
 if (IrReceiver.decode()) {
+  Serial.println("IR signal detected.");
         handleIRCommand(IrReceiver.decodedIRData.decodedRawData);
         IrReceiver.resume();
 }

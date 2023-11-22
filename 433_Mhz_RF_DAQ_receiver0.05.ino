@@ -65,7 +65,7 @@ void setup() {
 }
 
 String generateUniqueFilename() {
-  String baseName = "csvData";
+  String baseName = "csvDAQ";
   String extension = ".txt";
   if (!SD.exists(baseName + extension)) {
     return baseName + extension;
